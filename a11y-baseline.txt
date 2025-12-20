@@ -1,0 +1,23 @@
+
+> reponexus:-ai-repository-architect@0.0.0 lint
+> eslint . --ext .ts,.tsx
+
+
+/Volumes/WS4TB/Git_Repo_Nexus/reponexus_-ai-repository-architect/App.tsx
+   55:19  error  Unexpected any. Specify a different type                         @typescript-eslint/no-explicit-any
+  105:27  error  Unexpected any. Specify a different type                         @typescript-eslint/no-explicit-any
+  128:19  error  Unexpected any. Specify a different type                         @typescript-eslint/no-explicit-any
+  144:21  error  Unexpected any. Specify a different type                         @typescript-eslint/no-explicit-any
+  408:19  error  A form label must be associated with a control                   jsx-a11y/label-has-associated-control
+  419:19  error  A form label must be associated with a control                   jsx-a11y/label-has-associated-control
+  428:69  error  `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+  428:74  error  `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+  514:27  error  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+  514:51  error  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+
+/Volumes/WS4TB/Git_Repo_Nexus/reponexus_-ai-repository-architect/services/geminiService.ts
+  67:14  warning  'parseError' is defined but never used    @typescript-eslint/no-unused-vars
+  71:19  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+✖ 12 problems (11 errors, 1 warning)
+
