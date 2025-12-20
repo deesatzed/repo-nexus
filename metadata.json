@@ -1,0 +1,5 @@
+{
+  "name": "RepoNexus: AI Repository Architect",
+  "description": "An intelligent dashboard for GitHub users to analyze private repositories, extract resume-ready descriptors, mine forgotten ideas, and receive structural reorganization advice using Gemini AI.",
+  "requestFramePermissions": []
+}
