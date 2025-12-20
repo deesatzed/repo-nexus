@@ -3,6 +3,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { GithubRepo, View, AnalysisResult } from './types';
 import { GithubService } from './services/githubService';
 import { analyzeRepository } from './services/geminiService';
+import { migrateCacheIfNeeded } from './lib/cache';
 
 // Reusable Components
 const NavItem: React.FC<{ active: boolean; label: string; onClick: () => void; icon: React.ReactNode }> = ({ active, label, onClick, icon }) => (
@@ -43,6 +44,11 @@ const App: React.FC = () => {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Initialize cache migration on app load
+  useEffect(() => {
+    migrateCacheIfNeeded();
+  }, []);
 
   const fetchRepos = useCallback(async () => {
     if (!githubToken || !username) return;
