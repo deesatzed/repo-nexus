@@ -1,0 +1,17 @@
+
+> reponexus:-ai-repository-architect@0.0.0 lint
+> eslint . --ext .ts,.tsx
+
+
+/Volumes/WS4TB/Git_Repo_Nexus/reponexus_-ai-repository-architect/App.tsx
+   73:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  123:27  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  146:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  162:21  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/Volumes/WS4TB/Git_Repo_Nexus/reponexus_-ai-repository-architect/services/geminiService.ts
+  67:14  warning  'parseError' is defined but never used    @typescript-eslint/no-unused-vars
+  71:19  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+✖ 6 problems (5 errors, 1 warning)
+
