@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import FocusTrap from 'focus-trap-react';
 import { GithubRepo, View, AnalysisResult } from './types';
 import { GithubService } from './services/githubService';
 import { analyzeRepository } from './services/geminiService';
@@ -49,6 +50,17 @@ const App: React.FC = () => {
   useEffect(() => {
     migrateCacheIfNeeded();
   }, []);
+
+  // ESC key handler for modal
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && selectedRepo) {
+        setSelectedRepo(null);
+      }
+    };
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [selectedRepo]);
 
   const fetchRepos = useCallback(async () => {
     if (!githubToken || !username) return;
@@ -455,12 +467,18 @@ const App: React.FC = () => {
         {/* Modal-like Overlay for Analysis Results */}
         {selectedRepo && (
           <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-            <div className="bg-[#0f172a] w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col rounded-3xl border border-slate-800 shadow-2xl">
-              <div className="bg-[#0f172a] border-b border-slate-800 p-6 flex justify-between items-center shrink-0">
-                <div>
-                  <h3 className="text-2xl font-bold text-white">{selectedRepo.name}</h3>
-                  <p className="text-slate-400 text-sm">AI Analysis Report</p>
-                </div>
+            <FocusTrap focusTrapOptions={{ initialFocus: false, allowOutsideClick: true }}>
+              <div
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="modal-title"
+                className="bg-[#0f172a] w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col rounded-3xl border border-slate-800 shadow-2xl"
+              >
+                <div className="bg-[#0f172a] border-b border-slate-800 p-6 flex justify-between items-center shrink-0">
+                  <div>
+                    <h3 id="modal-title" className="text-2xl font-bold text-white">{selectedRepo.name}</h3>
+                    <p className="text-slate-400 text-sm">AI Analysis Report</p>
+                  </div>
                 <button
                   onClick={() => setSelectedRepo(null)}
                   aria-label="Close analysis modal"
@@ -472,14 +490,22 @@ const App: React.FC = () => {
 
               {/* Tab Switcher */}
               {analysis.status === 'success' && (
-                <div className="bg-slate-900/50 flex px-6 border-b border-slate-800 shrink-0">
-                  <button 
+                <div role="tablist" className="bg-slate-900/50 flex px-6 border-b border-slate-800 shrink-0">
+                  <button
+                    id="insights-tab"
+                    role="tab"
+                    aria-selected={modalTab === 'insights'}
+                    aria-controls="insights-panel"
                     onClick={() => setModalTab('insights')}
                     className={`px-6 py-3 text-sm font-semibold transition-all border-b-2 ${modalTab === 'insights' ? 'border-indigo-500 text-white' : 'border-transparent text-slate-500 hover:text-slate-300'}`}
                   >
                     AI Insights
                   </button>
-                  <button 
+                  <button
+                    id="readme-tab"
+                    role="tab"
+                    aria-selected={modalTab === 'readme'}
+                    aria-controls="readme-panel"
                     onClick={() => setModalTab('readme')}
                     className={`px-6 py-3 text-sm font-semibold transition-all border-b-2 ${modalTab === 'readme' ? 'border-indigo-500 text-white' : 'border-transparent text-slate-500 hover:text-slate-300'}`}
                   >
@@ -518,7 +544,12 @@ const App: React.FC = () => {
                 )}
 
                 {analysis.status === 'success' && modalTab === 'insights' && (
-                  <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                  <div
+                    id="insights-panel"
+                    role="tabpanel"
+                    aria-labelledby="insights-tab"
+                    className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-500"
+                  >
                     
                     {/* Project Pulse Section - HIGHLIGHTED */}
                     <section className="relative overflow-hidden group">
@@ -606,7 +637,12 @@ const App: React.FC = () => {
                 )}
 
                 {analysis.status === 'success' && modalTab === 'readme' && (
-                  <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 h-full flex flex-col">
+                  <div
+                    id="readme-panel"
+                    role="tabpanel"
+                    aria-labelledby="readme-tab"
+                    className="animate-in fade-in slide-in-from-bottom-4 duration-500 h-full flex flex-col"
+                  >
                     <div className="flex items-center gap-3 mb-4">
                       <div className="w-8 h-8 bg-slate-700/50 text-slate-300 rounded-lg flex items-center justify-center">
                         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h7" /></svg>
@@ -624,7 +660,7 @@ const App: React.FC = () => {
               </div>
 
               <div className="p-6 bg-slate-900/50 border-t border-slate-800 text-center shrink-0">
-                <button 
+                <button
                   onClick={() => setSelectedRepo(null)}
                   className="px-8 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-lg transition-all shadow-lg shadow-indigo-600/20"
                 >
@@ -632,6 +668,7 @@ const App: React.FC = () => {
                 </button>
               </div>
             </div>
+            </FocusTrap>
           </div>
         )}
       </main>
