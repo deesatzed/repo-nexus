@@ -45,6 +45,9 @@ const App: React.FC = () => {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [savingSettings, setSavingSettings] = useState(false);
+  const [deletingRepoId, setDeletingRepoId] = useState<number | null>(null);
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
   // Initialize cache migration on app load
   useEffect(() => {
@@ -62,6 +65,14 @@ const App: React.FC = () => {
     return () => document.removeEventListener('keydown', handleEscape);
   }, [selectedRepo]);
 
+  // Auto-dismiss toast after 4 seconds
+  useEffect(() => {
+    if (toast) {
+      const timer = setTimeout(() => setToast(null), 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [toast]);
+
   const fetchRepos = useCallback(async () => {
     if (!githubToken || !username) return;
     setLoading(true);
@@ -70,8 +81,11 @@ const App: React.FC = () => {
       const service = new GithubService(githubToken);
       const data = await service.fetchUserRepos(username);
       setRepos(data);
+      setToast({ message: `Loaded ${data.length} repositories`, type: 'success' });
     } catch (err: any) {
-      setError(err.message);
+      const errorMsg = err.message || 'Failed to fetch repositories';
+      setError(errorMsg);
+      setToast({ message: errorMsg, type: 'error' });
     } finally {
       setLoading(false);
     }
@@ -83,12 +97,20 @@ const App: React.FC = () => {
     }
   }, [fetchRepos, githubToken, username, repos.length]);
 
-  const handleSaveSettings = (e: React.FormEvent) => {
+  const handleSaveSettings = async (e: React.FormEvent) => {
     e.preventDefault();
-    localStorage.setItem('gh_token', githubToken);
-    localStorage.setItem('gh_user', username);
-    setView(View.DASHBOARD);
-    fetchRepos();
+    setSavingSettings(true);
+    try {
+      localStorage.setItem('gh_token', githubToken);
+      localStorage.setItem('gh_user', username);
+      setView(View.DASHBOARD);
+      await fetchRepos();
+      setToast({ message: 'Settings saved successfully', type: 'success' });
+    } catch (err: any) {
+      setToast({ message: err.message || 'Failed to save settings', type: 'error' });
+    } finally {
+      setSavingSettings(false);
+    }
   };
 
   const handleAnalyze = async (repo: GithubRepo) => {
@@ -154,13 +176,19 @@ const App: React.FC = () => {
 
   const handleDeleteRepo = async (repo: GithubRepo) => {
     if (window.confirm(`Are you sure you want to permanently delete the repository "${repo.name}"? This action is irreversible.`)) {
+      setDeletingRepoId(repo.id);
       try {
         const service = new GithubService(githubToken);
         await service.deleteRepo(repo.full_name);
         // Refresh the repo list by removing the deleted repo from the state
         setRepos(prevRepos => prevRepos.filter(r => r.id !== repo.id));
+        setToast({ message: `Repository "${repo.name}" deleted successfully`, type: 'success' });
       } catch (err: any) {
-        setError(err.message);
+        const errorMsg = err.message || 'Failed to delete repository';
+        setError(errorMsg);
+        setToast({ message: errorMsg, type: 'error' });
+      } finally {
+        setDeletingRepoId(null);
       }
     }
   };
@@ -229,6 +257,39 @@ const App: React.FC = () => {
 
   return (
     <div className="min-h-screen flex bg-[#0f172a] text-slate-200">
+      {/* Toast Notification */}
+      {toast && (
+        <div
+          className={`fixed top-4 right-4 z-50 px-6 py-4 rounded-xl shadow-2xl flex items-center gap-3 min-w-[320px] max-w-md animate-in slide-in-from-top-4 fade-in duration-300 ${
+            toast.type === 'success'
+              ? 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-400'
+              : 'bg-red-500/10 border border-red-500/20 text-red-400'
+          }`}
+          role="alert"
+          aria-live="polite"
+        >
+          {toast.type === 'success' ? (
+            <svg className="w-6 h-6 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          ) : (
+            <svg className="w-6 h-6 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          )}
+          <span className="flex-1 font-medium">{toast.message}</span>
+          <button
+            onClick={() => setToast(null)}
+            aria-label="Dismiss notification"
+            className="flex-shrink-0 hover:opacity-70 transition-opacity"
+          >
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+      )}
+
       {/* Sidebar */}
       <aside className="w-64 border-r border-slate-800 bg-[#020617] p-6 flex flex-col gap-8 hidden md:flex">
         <div className="flex items-center gap-3">
@@ -271,7 +332,8 @@ const App: React.FC = () => {
           <div className="flex items-center gap-4">
             <button
               onClick={fetchRepos}
-              className="p-2 text-slate-400 hover:text-white transition-colors"
+              disabled={loading}
+              className="p-2 text-slate-400 hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               aria-label="Refresh repositories"
             >
               <svg className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} aria-hidden="true" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -393,10 +455,18 @@ const App: React.FC = () => {
                     <div className="flex items-center gap-4">
                       <button
                         onClick={() => handleDeleteRepo(repo)}
+                        disabled={deletingRepoId === repo.id}
                         aria-label={`Delete repository ${repo.name}`}
-                        className="text-red-500 hover:text-red-400 transition-colors"
+                        className="text-red-500 hover:text-red-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                       >
-                        <svg className="w-5 h-5" aria-hidden="true" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                        {deletingRepoId === repo.id ? (
+                          <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                        ) : (
+                          <svg className="w-5 h-5" aria-hidden="true" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                        )}
                       </button>
                       <a
                         href={`https://github.com/${repo.full_name}/archive/refs/heads/${repo.default_branch}.zip`}
@@ -456,7 +526,19 @@ const App: React.FC = () => {
                   <p className="mt-2 text-xs text-slate-500">Ensure &apos;repo&apos; scope is selected for private access. Stored locally only.</p>
                 </div>
                 <div className="pt-4 flex gap-4">
-                  <button type="submit" className="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 rounded-xl transition-all">Save Config</button>
+                  <button
+                    type="submit"
+                    disabled={savingSettings}
+                    className="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  >
+                    {savingSettings && (
+                      <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                    )}
+                    {savingSettings ? 'Saving...' : 'Save Config'}
+                  </button>
                   <button type="button" onClick={() => setView(View.DASHBOARD)} className="px-6 py-3 border border-slate-700 text-slate-400 hover:text-white rounded-xl transition-all">Cancel</button>
                 </div>
               </form>
