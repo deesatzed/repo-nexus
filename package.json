@@ -9,16 +9,21 @@
     "preview": "vite preview",
     "lint": "eslint . --ext .ts,.tsx",
     "lint:fix": "eslint . --ext .ts,.tsx --fix",
-    "a11y:audit": "axe http://localhost:5173 --exit"
+    "a11y:audit": "axe http://localhost:5173 --exit",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:report": "playwright show-report"
   },
   "dependencies": {
     "@google/genai": "^1.34.0",
+    "focus-trap-react": "^11.0.4",
     "react": "^19.2.3",
     "react-dom": "^19.2.3"
   },
   "devDependencies": {
     "@axe-core/cli": "^4.11.0",
     "@eslint/js": "^9.39.2",
+    "@playwright/test": "^1.57.0",
     "@types/node": "^22.14.0",
     "@typescript-eslint/eslint-plugin": "^8.50.0",
     "@typescript-eslint/parser": "^8.50.0",

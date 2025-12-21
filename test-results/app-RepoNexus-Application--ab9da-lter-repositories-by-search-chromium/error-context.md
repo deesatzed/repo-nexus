@@ -1,0 +1,54 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e3]:
+  - complementary [ref=e4]:
+    - generic [ref=e5]:
+      - img [ref=e7]
+      - heading "RepoNexus" [level=1] [ref=e9]
+    - navigation [ref=e10]:
+      - button "Dashboard" [ref=e11] [cursor=pointer]:
+        - img [ref=e12]
+        - generic [ref=e14]: Dashboard
+      - button "Settings" [ref=e15] [cursor=pointer]:
+        - img [ref=e16]
+        - generic [ref=e19]: Settings
+    - generic [ref=e20]:
+      - paragraph [ref=e21]: Connected as
+      - paragraph [ref=e22]: testuser
+  - main [ref=e23]:
+    - generic [ref=e24]:
+      - heading "Repository Explorer" [level=2] [ref=e25]
+      - button "Refresh repositories" [ref=e27] [cursor=pointer]:
+        - img [ref=e28]
+    - generic [ref=e30]:
+      - generic [ref=e31]:
+        - generic [ref=e32]: Search repositories
+        - img [ref=e33]
+        - textbox "Search repositories" [ref=e35]:
+          - /placeholder: Search repositories...
+      - generic [ref=e36]:
+        - generic [ref=e37]: "Lang:"
+        - combobox "Lang:" [ref=e38]:
+          - option "All" [selected]
+      - generic [ref=e39]:
+        - generic [ref=e40]: "Access:"
+        - combobox "Access:" [ref=e41]:
+          - option "All" [selected]
+          - option "Private"
+          - option "Public"
+      - generic [ref=e42]:
+        - generic [ref=e43]: "Sort:"
+        - combobox "Sort:" [ref=e44]:
+          - option "Updated (Newest)" [selected]
+          - option "Updated (Oldest)"
+          - option "Name (A-Z)"
+          - option "Name (Z-A)"
+          - option "Language"
+      - generic [ref=e45]: 0 results
+    - generic [ref=e46]:
+      - generic [ref=e47]:
+        - generic [ref=e48]: "GitHub API Error:"
+        - button "Dismiss" [ref=e49] [cursor=pointer]
+      - generic [ref=e51]: No repositories match your criteria.
+```
