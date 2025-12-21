@@ -274,9 +274,13 @@ const App: React.FC = () => {
           <div className="bg-[#0f172a]/50 backdrop-blur-md border-b border-slate-800 px-8 py-3 flex flex-wrap items-center gap-4">
             {/* Search */}
             <div className="relative flex-1 min-w-[200px]">
-              <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
-              <input 
-                type="text" 
+              <label htmlFor="search-repos" className="sr-only">
+                Search repositories
+              </label>
+              <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" aria-hidden="true" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+              <input
+                id="search-repos"
+                type="text"
                 placeholder="Search repositories..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -286,8 +290,9 @@ const App: React.FC = () => {
 
             {/* Language Filter */}
             <div className="flex items-center gap-2">
-              <span className="text-xs text-slate-500 font-medium uppercase tracking-tight">Lang:</span>
-              <select 
+              <label htmlFor="filter-lang" className="text-xs text-slate-500 font-medium uppercase tracking-tight">Lang:</label>
+              <select
+                id="filter-lang"
                 value={filterLang}
                 onChange={(e) => setFilterLang(e.target.value)}
                 className="bg-[#020617] border border-slate-800 rounded-lg px-3 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-indigo-500 text-slate-300"
@@ -298,8 +303,9 @@ const App: React.FC = () => {
 
             {/* Visibility Filter */}
             <div className="flex items-center gap-2">
-              <span className="text-xs text-slate-500 font-medium uppercase tracking-tight">Access:</span>
-              <select 
+              <label htmlFor="filter-visibility" className="text-xs text-slate-500 font-medium uppercase tracking-tight">Access:</label>
+              <select
+                id="filter-visibility"
                 value={filterVisibility}
                 onChange={(e) => setFilterVisibility(e.target.value as VisibilityFilter)}
                 className="bg-[#020617] border border-slate-800 rounded-lg px-3 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-indigo-500 text-slate-300"
@@ -312,8 +318,9 @@ const App: React.FC = () => {
 
             {/* Sorting */}
             <div className="flex items-center gap-2">
-              <span className="text-xs text-slate-500 font-medium uppercase tracking-tight">Sort:</span>
-              <select 
+              <label htmlFor="sort-by" className="text-xs text-slate-500 font-medium uppercase tracking-tight">Sort:</label>
+              <select
+                id="sort-by"
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value as SortOption)}
                 className="bg-[#020617] border border-slate-800 rounded-lg px-3 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-indigo-500 text-slate-300"
@@ -411,8 +418,9 @@ const App: React.FC = () => {
               <h3 className="text-xl font-bold text-white mb-6">Access Credentials</h3>
               <form onSubmit={handleSaveSettings} className="space-y-6">
                 <div>
-                  <label className="block text-sm font-medium text-slate-400 mb-2">GitHub Username</label>
+                  <label htmlFor="github-username" className="block text-sm font-medium text-slate-400 mb-2">GitHub Username</label>
                   <input
+                    id="github-username"
                     type="text"
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
@@ -422,8 +430,9 @@ const App: React.FC = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-400 mb-2">Personal Access Token (classic)</label>
+                  <label htmlFor="github-token" className="block text-sm font-medium text-slate-400 mb-2">Personal Access Token (classic)</label>
                   <input
+                    id="github-token"
                     type="password"
                     value={githubToken}
                     onChange={(e) => setGithubToken(e.target.value)}
@@ -431,7 +440,7 @@ const App: React.FC = () => {
                     placeholder="ghp_xxxxxxxxxxxx"
                     required
                   />
-                  <p className="mt-2 text-xs text-slate-500">Ensure 'repo' scope is selected for private access. Stored locally only.</p>
+                  <p className="mt-2 text-xs text-slate-500">Ensure &apos;repo&apos; scope is selected for private access. Stored locally only.</p>
                 </div>
                 <div className="pt-4 flex gap-4">
                   <button type="submit" className="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 rounded-xl transition-all">Save Config</button>
@@ -517,7 +526,7 @@ const App: React.FC = () => {
                           <h4 className="text-lg font-bold text-white tracking-tight">Project Identity</h4>
                         </div>
                         <p className="text-xl md:text-2xl font-medium text-slate-100 leading-tight italic">
-                          "{analysis.projectPulse}"
+                          &quot;{analysis.projectPulse}&quot;
                         </p>
                         <div className="mt-4 flex gap-2">
                            <span className="h-1 w-12 bg-indigo-500 rounded-full"></span>
