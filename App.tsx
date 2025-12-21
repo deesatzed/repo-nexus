@@ -257,12 +257,12 @@ const App: React.FC = () => {
             {view === View.DASHBOARD ? 'Repository Explorer' : view === View.SETTINGS ? 'Configuration' : 'Repo Analysis'}
           </h2>
           <div className="flex items-center gap-4">
-            <button 
+            <button
               onClick={fetchRepos}
               className="p-2 text-slate-400 hover:text-white transition-colors"
-              title="Refresh Repositories"
+              aria-label="Refresh repositories"
             >
-              <svg className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} aria-hidden="true" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
               </svg>
             </button>
@@ -381,25 +381,26 @@ const App: React.FC = () => {
                     <div className="flex items-center gap-4">
                       <button
                         onClick={() => handleDeleteRepo(repo)}
-                        title="Delete Repository"
-                        className="text-slate-400 hover:text-red-500 transition-colors"
+                        aria-label={`Delete repository ${repo.name}`}
+                        className="text-red-500 hover:text-red-400 transition-colors"
                       >
-                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                        <svg className="w-5 h-5" aria-hidden="true" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                       </button>
-                      <a 
+                      <a
                         href={`https://github.com/${repo.full_name}/archive/refs/heads/${repo.default_branch}.zip`}
                         download
-                        title="Download as .zip"
+                        aria-label={`Download ${repo.name} as zip file`}
                         className="text-slate-400 hover:text-white transition-colors"
                       >
-                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+                        <svg className="w-5 h-5" aria-hidden="true" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
                       </a>
-                      <button 
+                      <button
                         onClick={() => handleAnalyze(repo)}
+                        aria-label={`Analyze ${repo.name} with AI`}
                         className="text-xs font-bold text-indigo-400 hover:text-white flex items-center gap-2"
                       >
                         Analyze AI
-                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+                        <svg className="w-4 h-4" aria-hidden="true" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
                       </button>
                     </div>
                   </div>
@@ -460,8 +461,12 @@ const App: React.FC = () => {
                   <h3 className="text-2xl font-bold text-white">{selectedRepo.name}</h3>
                   <p className="text-slate-400 text-sm">AI Analysis Report</p>
                 </div>
-                <button onClick={() => setSelectedRepo(null)} className="p-2 hover:bg-slate-800 rounded-full text-slate-400 hover:text-white transition-colors">
-                  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                <button
+                  onClick={() => setSelectedRepo(null)}
+                  aria-label="Close analysis modal"
+                  className="p-2 hover:bg-slate-800 rounded-full text-slate-400 hover:text-white transition-colors"
+                >
+                  <svg className="w-6 h-6" aria-hidden="true" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
                 </button>
               </div>
 
