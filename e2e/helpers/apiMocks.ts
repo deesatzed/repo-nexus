@@ -21,7 +21,8 @@ export async function mockGitHubAPI(
     errorMessage
   } = options;
 
-  await page.route('https://api.github.com/user/repos*', async route => {
+  // FIX: Match actual endpoint pattern /users/{username}/repos (not /user/repos)
+  await page.route('**/users/*/repos*', async route => {
     // Add realistic network delay to prevent timing issues
     if (delay > 0) {
       await page.waitForTimeout(delay);
