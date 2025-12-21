@@ -2,53 +2,58 @@
 
 ```yaml
 - generic [ref=e3]:
-  - complementary [ref=e4]:
-    - generic [ref=e5]:
-      - img [ref=e7]
-      - heading "RepoNexus" [level=1] [ref=e9]
-    - navigation [ref=e10]:
-      - button "Dashboard" [ref=e11] [cursor=pointer]:
-        - img [ref=e12]
-        - generic [ref=e14]: Dashboard
-      - button "Settings" [ref=e15] [cursor=pointer]:
-        - img [ref=e16]
-        - generic [ref=e19]: Settings
-    - generic [ref=e20]:
-      - paragraph [ref=e21]: Connected as
-      - paragraph [ref=e22]: testuser
-  - main [ref=e23]:
-    - generic [ref=e24]:
-      - heading "Repository Explorer" [level=2] [ref=e25]
-      - button "Refresh repositories" [ref=e27] [cursor=pointer]:
-        - img [ref=e28]
-    - generic [ref=e30]:
-      - generic [ref=e31]:
-        - generic [ref=e32]: Search repositories
-        - img [ref=e33]
-        - textbox "Search repositories" [ref=e35]:
+  - alert [ref=e4]:
+    - img [ref=e5]
+    - generic [ref=e7]: Settings saved successfully
+    - button "Dismiss notification" [ref=e8] [cursor=pointer]:
+      - img [ref=e9]
+  - complementary [ref=e11]:
+    - generic [ref=e12]:
+      - img [ref=e14]
+      - heading "RepoNexus" [level=1] [ref=e16]
+    - navigation [ref=e17]:
+      - button "Dashboard" [ref=e18] [cursor=pointer]:
+        - img [ref=e19]
+        - generic [ref=e21]: Dashboard
+      - button "Settings" [ref=e22] [cursor=pointer]:
+        - img [ref=e23]
+        - generic [ref=e26]: Settings
+    - generic [ref=e27]:
+      - paragraph [ref=e28]: Connected as
+      - paragraph [ref=e29]: testuser
+  - main [ref=e30]:
+    - generic [ref=e31]:
+      - heading "Repository Explorer" [level=2] [ref=e32]
+      - button "Refresh repositories" [ref=e34] [cursor=pointer]:
+        - img [ref=e35]
+    - generic [ref=e37]:
+      - generic [ref=e38]:
+        - generic [ref=e39]: Search repositories
+        - img [ref=e40]
+        - textbox "Search repositories" [ref=e42]:
           - /placeholder: Search repositories...
-      - generic [ref=e36]:
-        - generic [ref=e37]: "Lang:"
-        - combobox "Lang:" [ref=e38]:
+      - generic [ref=e43]:
+        - generic [ref=e44]: "Lang:"
+        - combobox "Lang:" [ref=e45]:
           - option "All" [selected]
-      - generic [ref=e39]:
-        - generic [ref=e40]: "Access:"
-        - combobox "Access:" [ref=e41]:
+      - generic [ref=e46]:
+        - generic [ref=e47]: "Access:"
+        - combobox "Access:" [ref=e48]:
           - option "All" [selected]
           - option "Private"
           - option "Public"
-      - generic [ref=e42]:
-        - generic [ref=e43]: "Sort:"
-        - combobox "Sort:" [ref=e44]:
+      - generic [ref=e49]:
+        - generic [ref=e50]: "Sort:"
+        - combobox "Sort:" [ref=e51]:
           - option "Updated (Newest)" [selected]
           - option "Updated (Oldest)"
           - option "Name (A-Z)"
           - option "Name (Z-A)"
           - option "Language"
-      - generic [ref=e45]: 0 results
-    - generic [ref=e46]:
-      - generic [ref=e47]:
-        - generic [ref=e48]: "GitHub API Error:"
-        - button "Dismiss" [ref=e49] [cursor=pointer]
-      - generic [ref=e51]: No repositories match your criteria.
+      - generic [ref=e52]: 0 results
+    - generic [ref=e53]:
+      - generic [ref=e54]:
+        - generic [ref=e55]: "GitHub API Error:"
+        - button "Dismiss" [ref=e56] [cursor=pointer]
+      - generic [ref=e58]: No repositories match your criteria.
 ```
