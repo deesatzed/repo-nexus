@@ -158,38 +158,77 @@ export async function generateResumePortfolio(repos: any[], analyses: any[]) {
     throw new Error("OpenRouter API key is not configured.");
   }
 
+  // OPTIMIZATION: Minify data to allow specific deep analysis of dozens of repos without hitting token limits
+  const optimizedInput = repos.map(repo => {
+    // Find matching analysis
+    const analysis = analyses.find(a =>
+      // Heuristic matching since IDs might vary between local/remote
+      a.projectId === repo.id || (a.name && repo.name && a.name === repo.name)
+    ) || {};
+
+    return {
+      name: repo.name,
+      language: repo.language,
+      description: repo.description,
+      // Include critical forensic data
+      techStack: repo.techSignature?.dependencies || [],
+      vitality: analysis.vitalityScore,
+      keyComponents: analysis.componentCatalog?.map((c: any) => c.name) || [],
+      archPattern: analysis.architecturalPattern
+    };
+  });
+
   const prompt = `
-    You are a Senior Technical Recruiter and Resume Writer.
+    You are a Senior Technical Recruiter and Career Architect for FAANG-level roles.
     
-    I have a developer's portfolio of ${repos.length} repositories with detailed architectural analyses.
+    I have a portfolio of ${repos.length} repositories.
     
-    Repository Data:
-    ${JSON.stringify(repos.slice(0, 20), null, 2)}
+    Optimized Forensic Data:
+    ${JSON.stringify(optimizedInput, null, 2)}
     
-    Analysis Data (10-Point Assessments):
-    ${JSON.stringify(analyses.slice(0, 20), null, 2)}
+    Task: Create a "Distinguished Engineer's Portfolio Report".
     
-    Task: Generate a "Professional Portfolio Report" suitable for a RESUME ADDENDUM or LINKEDIN PROFILE.
+    Return JSON with these exact sections:
     
-    Return JSON with these sections:
-    1. "executiveSummary": string (2-3 sentence compelling elevator pitch highlighting unique strengths)
-    2. "skillsMatrix": Object with keys like "languages", "frameworks", "tools", "methodologies" - each an array of strings (e.g., ["TypeScript", "Python"])
-    3. "projectShowcase": Array of top 5-7 projects, each with:
+    1. "executiveSummary": string 
+       - 3 paragraphs.
+       - Focus on: Breadth of technical vision, Ability to ship (Vitality), and Architectural diversity.
+       
+    2. "quantitativeHighlights": Object
+       - "totalrepositories": number
+       - "languagesBreakdown": Object { [lang: string]: number }
+       - "dominantTechStack": string[]
+       - "architecturalPatterns": string[]
+       
+    3. "engineeringPhilosophy": string 
+       - Deduced from the code patterns.
+       
+    4. "projectShowcase": Array of the top 8-12 "Defining Projects".
        - "name": string
-       - "tagline": string (One sentence hook)
-       - "bulletPoints": string[] (3-4 professional achievement bullets, quantified where possible)
-       - "technicalHighlights": string[] (Key technologies used)
-       - "impact": string (Business value or technical achievement)
-    4. "architectureExperience": string[] (List of patterns/approaches: "Microservices", "Event-Driven", etc.)
-    5. "qualityPractices": string[] (Testing, CI/CD, code review evidence found)
-    6. "standoutAchievements": string[] (3-5 unique accomplishments across all repos that differentiate this candidate)
-    7. "careerNarrative": string (A cohesive 2-paragraph story connecting all projects)
+       - "roleDefinition": string
+       - "problem": string
+       - "solution": string
+       - "impact": string
+       - "techTags": string[]
+       - "novelTechniques": string[] (Specific, non-banal technical implementations, e.g. "Custom Hydration Strategy", "Bitwise Permission System")
+       
+    5. "fullProjectRegistry": Array of Objects.
+       - "name": string
+       - "description": string
+       - "status": "Active"|"Archive"
+       - "category": string (SUGGEST A CATEGORY: e.g. "Systems", "UI/UX", "Data Pipelines", "Experiments")
+       - "private": boolean (Inferred - is it likely a private/internal tool?)
+       - "standoutFactor": string (Why is this unique? 1 sentence. No fluff.)
+       
+    6. "suggestedCategories": Object
+       - "showFirst": string[] (Categories that show the strongest engineering value)
+       - "combineCandidates": Array<{ category: string, repos: string[], reason: string }> (Repos that are mostly similar and could be merged in a resume)
+       
+    7. "skillsMatrix": Object { languages: string[], frameworks: string[], tools: string[], concepts: string[] }
     
-    CRITICAL RULES:
-    - Use active voice and quantify achievements (e.g., "Reduced API latency by 40%" not "Worked on performance")
-    - Focus on IMPACT and SCALE, not just technologies
-    - Make it ATS-friendly (use standard job titles and keywords)
-    - Highlight leadership/ownership indicators
+    Style Guide:
+    - NO FLUFF. Banned words: "Cutting-edge", "State-of-the-art", "Best-in-class".
+    - Focus on NOVELTY. What did they build that isn't just 'npm install'?
   `;
 
   try {
@@ -206,7 +245,7 @@ export async function generateResumePortfolio(repos: any[], analyses: any[]) {
         "messages": [
           {
             "role": "system",
-            "content": "You are a Technical Recruiter and Resume Writer. Respond ONLY with valid JSON."
+            "content": "You are a Senior Career Architect. Respond ONLY with valid JSON."
           },
           { "role": "user", "content": prompt }
         ],

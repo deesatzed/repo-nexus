@@ -45,6 +45,181 @@ const App: React.FC = () => {
     return saved ? JSON.parse(saved) : null;
   });
   const [isSummarizing, setIsSummarizing] = useState(false);
+  const [portfolioData, setPortfolioData] = useState<any>(null);
+
+  const downloadHtmlPortfolio = () => {
+    if (!portfolioData) return;
+
+    const htmlContent = `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Engineering Portfolio</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <style>body { font-family: 'Inter', sans-serif; }</style>
+</head>
+<body class="bg-slate-900 text-slate-200">
+    <div class="max-w-5xl mx-auto px-6 py-20">
+        <header class="mb-20">
+            <h1 class="text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-600 mb-6">Distinguished Engineer Portfolio</h1>
+            <div class="text-xl text-slate-400 leading-relaxed max-w-3xl">\${portfolioData.executiveSummary?.replace(/\\n/g, '<br/>')}</div>
+        </header>
+
+        <section class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-20 bg-slate-800/50 p-8 rounded-3xl border border-slate-700">
+             <div><div class="text-4xl font-bold text-white mb-2">\${portfolioData.quantitativeHighlights?.totalrepositories || 0}</div><div class="text-xs uppercase tracking-widest text-slate-500">Repositories</div></div>
+             <div><div class="text-sm text-slate-300 font-mono">\${portfolioData.quantitativeHighlights?.dominantTechStack?.slice(0, 3).join(', ')}...</div><div class="text-xs uppercase tracking-widest text-slate-500 mt-2">Core Stack</div></div>
+             <div class="col-span-2 border-l border-slate-700 pl-8">
+                <h3 class="text-xs uppercase tracking-widest text-slate-500 mb-2">Signature Style</h3>
+                <p class="italic text-slate-300">"\${portfolioData.engineeringPhilosophy}"</p>
+             </div>
+        </section>
+
+        <section class="mb-20">
+            <h2 class="text-3xl font-bold text-white mb-10 border-b border-slate-800 pb-4">Defining Projects</h2>
+            <div class="grid grid-cols-1 gap-12">
+                \${portfolioData.projectShowcase?.map((p: any) => \`
+                <div class="group relative bg-slate-800 p-8 rounded-3xl border border-slate-700 hover:border-cyan-500/50 transition-all">
+                    <div class="flex justify-between items-start mb-6">
+                        <div>
+                            <h3 class="text-2xl font-bold text-white group-hover:text-cyan-400 transition-colors">\${p.name}</h3>
+                            <div class="text-sm font-bold text-slate-500 mt-1 uppercase tracking-wide">\${p.roleDefinition}</div>
+                        </div>
+                        <div class="flex gap-2">
+                             \${p.techTags?.map((t: string) => \`<span class="px-3 py-1 bg-slate-700 rounded-full text-xs font-medium text-cyan-300 border border-cyan-500/20">\${t}</span>\`).join('')}
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-8 text-sm">
+                        <div class="bg-red-500/10 p-4 rounded-xl border border-red-500/10">
+                            <strong class="block text-red-400 mb-1 uppercase text-xs">The Challenge</strong>
+                            \${p.problem}
+                        </div>
+                        <div class="bg-emerald-500/10 p-4 rounded-xl border border-emerald-500/10">
+                            <strong class="block text-emerald-400 mb-1 uppercase text-xs">The Solution</strong>
+                            \${p.solution}
+                        </div>
+                        <div class="bg-blue-500/10 p-4 rounded-xl border border-blue-500/10">
+                            <strong class="block text-blue-400 mb-1 uppercase text-xs">Impact & Scale</strong>
+                            \${p.impact}
+                        </div>
+                    </div>
+                     \${p.novelTechniques?.length ? \`
+                    <div class="mt-6 pt-6 border-t border-slate-700">
+                        <strong class="text-xs uppercase text-slate-500 mb-2 block">Novel Techniques Exploration</strong>
+                        <ul class="grid grid-cols-2 gap-2">
+                            \${p.novelTechniques.map((nt: string) => \`<li class="flex items-center gap-2 text-slate-300 text-sm"><span class="w-1.5 h-1.5 bg-cyan-500 rounded-full"></span>\${nt}</li>\`).join('')}
+                        </ul>
+                    </div>
+                    \` : ''}
+                </div>
+                \`).join('')}
+            </div>
+        </section>
+
+        <section>
+            <h2 class="text-3xl font-bold text-white mb-10 border-b border-slate-800 pb-4">Complete Registry</h2>
+            <div class="grid grid-cols-1 gap-8">
+                 \${Array.isArray(portfolioData.fullProjectRegistry) 
+                    ? portfolioData.fullProjectRegistry.map((r: any) => \`
+                        <div class="flex justify-between items-baseline border-b border-slate-800 pb-2">
+                            <div class="font-mono text-cyan-200 font-bold">\${r.name}</div>
+                            <div class="text-sm text-slate-500 truncate max-w-xl">\${r.description}</div>
+                        </div>\`).join('') 
+                    : Object.entries(portfolioData.fullProjectRegistry || {}).map(([cat, items]: [string, any]) => \`
+                        <div class="mb-8">
+                            <div class="text-xl font-bold text-slate-400 mb-4 uppercase tracking-widest">\${cat}</div>
+                            \${items.map((r: any) => \`
+                            <div class="flex justify-between items-baseline border-b border-slate-800 pb-2 mb-2 group hover:bg-slate-800/50 p-2 rounded transition-colors">
+                                <div>
+                                    <span class="font-mono text-cyan-200 font-bold mr-3">\${r.name}</span>
+                                    <span class="text-xs text-slate-600 border border-slate-700 px-1 rounded">\${r.status || 'Active'}</span>
+                                    \${r.standoutFactor ? \`<span class="ml-2 text-xs text-amber-500/80 italic">★ \${r.standoutFactor}</span>\` : ''}
+                                </div>
+                                <div class="text-sm text-slate-500 text-right truncate max-w-xs">\${r.description}</div>
+                            </div>\`).join('')}
+                        </div>
+                    \`).join('')}
+            </div>
+        </section>
+        
+        <footer class="mt-20 pt-10 border-t border-slate-800 text-center text-slate-600 text-sm">
+            Generated by RepoNexus AI | Validated Forensic Architecture
+        </footer>
+    </div>
+</body>
+</html>`;
+
+    const blob = new Blob([htmlContent], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'portfolio-distinguished.html';
+    a.click();
+  };
+
+  const renderPortfolioView = () => {
+    if (!portfolioData) return null;
+
+    return (
+      <div className="animate-fade-in pb-20">
+        <div className="flex justify-between items-center mb-8 bg-slate-900/50 p-6 rounded-2xl border border-slate-700 backdrop-blur-sm sticky top-0 z-10">
+          <div>
+            <h2 className="text-2xl font-bold text-white flex items-center gap-3">
+              <span className="text-3xl">💼</span> Distinguished Portfolio
+            </h2>
+            <p className="text-slate-400 text-sm">Curated forensic verification of your engineering career.</p>
+          </div>
+          <div className="flex gap-4">
+            <button onClick={() => setView(View.INVENTORY)} className="px-4 py-2 text-slate-400 hover:text-white transition-colors">Back to Inventory</button>
+            <button onClick={downloadHtmlPortfolio} className="px-6 py-2 bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-bold rounded-lg shadow-lg hover:shadow-cyan-500/25 transition-all flex items-center gap-2">
+              Export as Web Page (HTML)
+            </button>
+          </div>
+        </div>
+
+        <div className="bg-slate-900 p-10 rounded-3xl border border-indigo-500/30 shadow-2xl mb-12 relative overflow-hidden">
+          <h1 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-white to-slate-400 mb-6 relative z-10">Engineering Executive Summary</h1>
+          <div className="text-lg text-slate-300 leading-relaxed max-w-4xl relative z-10 whitespace-pre-wrap">{portfolioData.executiveSummary}</div>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mt-12 pt-10 border-t border-slate-800 relative z-10">
+            <div className="bg-slate-950/50 p-4 rounded-xl text-center border border-slate-800">
+              <div className="text-3xl font-bold text-white mb-1">{portfolioData.quantitativeHighlights?.totalrepositories || 0}</div>
+              <div className="text-xs uppercase tracking-widest text-slate-500">Repositories</div>
+            </div>
+            <div className="bg-slate-950/50 p-4 rounded-xl text-center border border-slate-800">
+              <div className="text-3xl font-bold text-white mb-1">{Object.keys(portfolioData.quantitativeHighlights?.languagesBreakdown || {}).length}</div>
+              <div className="text-xs uppercase tracking-widest text-slate-500">Languages</div>
+            </div>
+            <div className="col-span-2 bg-slate-950/50 p-4 rounded-xl border border-slate-800 flex items-center">
+              <div>
+                <div className="text-xs uppercase tracking-widest text-indigo-400 mb-2">Signature Style</div>
+                <div className="text-sm text-slate-300 italic">"{portfolioData.engineeringPhilosophy}"</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <h3 className="text-2xl font-bold text-white mb-8 border-l-4 border-cyan-500 pl-4">Defining Projects & Novel Techniques</h3>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-16">
+          {portfolioData.projectShowcase?.map((proj: any, idx: number) => (
+            <div key={idx} className="bg-slate-800/80 p-8 rounded-3xl border border-slate-700 hover:border-cyan-500/40 transition-all group shadow-xl">
+              <div className="flex justify-between items-start mb-6">
+                <div>
+                  <h4 className="text-2xl font-bold text-white group-hover:text-cyan-400 transition-colors mb-2">{proj.name}</h4>
+                  <span className="inline-block px-3 py-1 bg-indigo-500/20 text-indigo-300 text-xs font-bold uppercase tracking-wider rounded-lg border border-indigo-500/20">{proj.roleDefinition}</span>
+                </div>
+              </div>
+              <div className="space-y-4 mb-8">
+                <div><strong className="text-indigo-400 text-xs uppercase tracking-wider block mb-1">Challenge</strong><p className="text-slate-300 text-sm">{proj.problem}</p></div>
+                <div><strong className="text-emerald-400 text-xs uppercase tracking-wider block mb-1">Solution</strong><p className="text-slate-300 text-sm">{proj.solution}</p></div>
+                <div><strong className="text-cyan-400 text-xs uppercase tracking-wider block mb-1">Impact</strong><p className="text-slate-300 text-sm font-semibold">{proj.impact}</p></div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  };
 
   const closeButtonRef = useRef<HTMLButtonElement>(null);
 
@@ -281,61 +456,70 @@ const App: React.FC = () => {
       const { generateResumePortfolio } = await import('./services/geminiService');
       const portfolio = await generateResumePortfolio(allRepos, analyses);
 
-      // Format as Markdown
-      const markdown = `# Professional Portfolio - Software Engineer
+      setPortfolioData(portfolio);
+      setView(View.PORTFOLIO);
+      setToast({ message: 'Portfolio Generated! Review and Export.', type: 'success' });
+      return;
 
+      // Format as Markdown
+      const markdown = `# Distinguished Engineer's Portfolio Report
+
+## Executive Summary
 ${portfolio.executiveSummary}
 
 ---
 
-## Technical Skills
-
-**Languages:** ${portfolio.skillsMatrix?.languages?.join(', ') || 'N/A'}
-**Frameworks:** ${portfolio.skillsMatrix?.frameworks?.join(', ') || 'N/A'}
-**Tools & Platforms:** ${portfolio.skillsMatrix?.tools?.join(', ') || 'N/A'}
-**Methodologies:** ${portfolio.skillsMatrix?.methodologies?.join(', ') || 'N/A'}
+## Engineering Impact By The Numbers
+* **Total Repositories:** ${portfolio.quantitativeHighlights?.totalrepositories || allRepos.length}
+* **Top Languages:** ${Object.entries(portfolio.quantitativeHighlights?.languagesBreakdown || {}).map(([k, v]) => `${k} (${v})`).join(', ')}
+* **Core Tech Stack:** ${portfolio.quantitativeHighlights?.dominantTechStack?.join(', ')}
+* **Architectural Diversity:** ${portfolio.quantitativeHighlights?.architecturalPatterns?.join(', ')}
 
 ---
 
-## Project Showcase
+## Engineering Philosophy & Signature Style
+> ${portfolio.engineeringPhilosophy}
+
+---
+
+## Defining Projects (Challenge-Action-Result Showcase)
 
 ${portfolio.projectShowcase?.map((proj: any) => `
 ### ${proj.name}
-*${proj.tagline}*
+**Role:** ${proj.roleDefinition}
 
-${proj.bulletPoints?.map((bp: string) => `- ${bp}`).join('\n') || ''}
+* **Challenge:** ${proj.problem}
+* **Solution:** ${proj.solution}
+* **Impact:** ${proj.impact}
 
-**Technologies:** ${proj.technicalHighlights?.join(', ') || 'N/A'}  
-**Impact:** ${proj.impact}
-`).join('\n---\n') || 'No projects available'}
-
----
-
-## Architecture & Design Experience
-
-${portfolio.architectureExperience?.map((exp: string) => `- ${exp}`).join('\n') || 'N/A'}
+**Tech Stack:** ${proj.techTags?.join(', ')}
+`).join('\n---\n') || 'No priority projects identified'}
 
 ---
 
-## Quality & Best Practices
+## Full Project Registry: Complete Domain Map
 
-${portfolio.qualityPractices?.map((qp: string) => `- ${qp}`).join('\n') || 'N/A'}
-
----
-
-## Standout Achievements
-
-${portfolio.standoutAchievements?.map((sa: string) => `- ${sa}`).join('\n') || 'N/A'}
-
----
-
-## Career Narrative
-
-${portfolio.careerNarrative}
+${Array.isArray(portfolio.fullProjectRegistry)
+          ? portfolio.fullProjectRegistry.map((repo: any) => `* **${repo.name}** (${repo.status || 'Active'}): ${repo.description}`).join('\n')
+          : Object.entries(portfolio.fullProjectRegistry || {}).map(([domain, repos]: [string, any]) => `
+### ${domain}
+${Array.isArray(repos) ? repos.map((r: any) => `* **${r.name}** (${r.status || 'Active'}): ${r.description}`).join('\n') : ''}
+`).join('\n')
+        }
 
 ---
 
-*Generated by RepoNexus AI Repository Architect*
+## Technical Skills Matrix
+
+* **Languages:** ${portfolio.skillsMatrix?.languages?.join(', ') || 'N/A'}
+* **Frameworks:** ${portfolio.skillsMatrix?.frameworks?.join(', ') || 'N/A'}
+* **Tools & Infrastructure:** ${portfolio.skillsMatrix?.tools?.join(', ') || 'N/A'}
+* **Core Concepts:** ${portfolio.skillsMatrix?.concepts?.join(', ') || 'N/A'}
+
+---
+
+*Verified by RepoNexus AI Forensic Analysis*
+*Portfolio Volume: ${allRepos.length} Repositories*
 *Date: ${new Date().toLocaleDateString()}*
 `;
 
@@ -909,6 +1093,9 @@ ${portfolio.careerNarrative}
               </form>
             </div>
           )}
+
+
+          {view === View.PORTFOLIO && renderPortfolioView()}
 
           {view === View.INVENTORY && inventoryAnalysis && (
             <div className="max-w-7xl mx-auto space-y-12 pb-32">

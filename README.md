@@ -50,13 +50,12 @@ RepoNexus is a next-generation engineering portfolio manager that transforms you
 
 ### Resume & Career Tools
 
-- **Resume Portfolio** - Generate a professional, employer-ready document containing:
-  - **Executive Summary**: Compelling elevator pitch.
-  - **Skills Matrix**: Aggregated technologies across your entire portfolio.
-  - **Project Showcase**: Top projects with quantified impact and achievement bullets.
-  - **Testing & Quality Evidence**: Proof of best practices found in code forensics.
-  - **Career Narrative**: Cohesive story connecting all projects.
-  - **Download Options**: Export as professional **Markdown (.md)** or **JSON**.
+- **Distinguished Portfolio Builder** - Interactive, forensic review of your engineering career.
+  - **Interactive Dashboard**: Visualizes your "Executive Summary", "Core Stack", and "Defining Projects" instantly.
+  - **Web Page Exporter (HTML)**: Generate a standalone, employer-ready `portfolio.html` with premium Tailwind styling.
+  - **Forensic Detail**: Displays "Novel Techniques", "Impact", and "Challenge-Action-Result" per project.
+  - **Deep Registry**: Visualizes the AI's "Consolidated Registry" and suggested categories.
+  - **Download Options**: Export as professional **HTML**, **Markdown**, or **JSON**.
 
 ### Deep Forensic Analysis (10-Point Standard)
 
