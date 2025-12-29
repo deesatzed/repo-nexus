@@ -8,8 +8,23 @@ export class GithubService {
     this.token = token;
   }
 
-  async fetchUserRepos(username: string): Promise<GithubRepo[]> {
-    const response = await fetch(`https://api.github.com/users/${username}/repos?sort=updated&per_page=100`, {
+  async fetchUserRepos(): Promise<GithubRepo[]> {
+    const response = await fetch(`https://api.github.com/user/repos?sort=updated&per_page=100&affiliation=owner`, {
+      headers: {
+        Authorization: `token ${this.token}`,
+        Accept: 'application/vnd.github.v3+json',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`GitHub API Error: ${response.statusText}`);
+    }
+
+    return response.json();
+  }
+
+  async fetchRepoContents(fullName: string): Promise<any[]> {
+    const response = await fetch(`https://api.github.com/repos/${fullName}/contents`, {
       headers: {
         Authorization: `token ${this.token}`,
         Accept: 'application/vnd.github.v3+json',
@@ -32,8 +47,8 @@ export class GithubService {
     });
 
     if (!response.ok) {
-        if (response.status === 404) return "No README found.";
-        throw new Error(`GitHub API Error: ${response.statusText}`);
+      if (response.status === 404) return "No README found.";
+      throw new Error(`GitHub API Error: ${response.statusText}`);
     }
 
     return response.text();

@@ -10,6 +10,8 @@ export interface GithubRepo {
   updated_at: string;
   readme_content?: string;
   default_branch: string;
+  isLocal?: boolean;
+  localPath?: string;
 }
 
 export interface AnalysisResult {
@@ -18,12 +20,16 @@ export interface AnalysisResult {
   forgottenIdeas: string[];
   reorgAdvice: string;
   status: 'idle' | 'fetching_readme' | 'analyzing' | 'success' | 'error';
+  level: 'superficial' | 'detailed' | 'inventory';
   errorDetails?: string;
   fullReadme?: string;
+  detailedDescription?: string;
+  inventorySummary?: string;
 }
 
 export enum View {
   DASHBOARD = 'DASHBOARD',
   REPO_DETAIL = 'REPO_DETAIL',
-  SETTINGS = 'SETTINGS'
+  SETTINGS = 'SETTINGS',
+  INVENTORY = 'INVENTORY'
 }
