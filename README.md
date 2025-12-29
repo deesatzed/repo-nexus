@@ -2,7 +2,7 @@
 
 <div align="center">
 
-**AI-Powered GitHub Repository Manager & Analyzer**
+**AI-Powered GitHub Repository Architect & Forensic Analyst**
 
 [![E2E Tests](https://img.shields.io/badge/E2E_Tests-18%2F18_Passing-success?style=flat-square)](./E2E_DEBUG_SUMMARY.md)
 [![Accessibility](https://img.shields.io/badge/WCAG-2.1_AA-blue?style=flat-square)](#accessibility)
@@ -18,70 +18,74 @@
 
 ## Overview
 
-RepoNexus is a modern, accessible GitHub repository management application that combines powerful filtering, sorting, and AI-driven analysis capabilities. Built with React 19 and TypeScript, it provides an intuitive interface for developers to explore, analyze, and manage their GitHub repositories.
+RepoNexus is a next-generation engineering portfolio manager that transforms your source code into a strategic asset. It goes beyond simple listing, providing a **Chief Technology Officer's Architecture Review** of your entire repository collection. Using deep forensic analysis, it identifies reusable components, technical debt, and summarizes your engineering value into a professional resume addendum.
 
 ### Key Highlights
 
-- 🎯 **Smart Filtering & Sorting** - Search, filter by language/visibility, sort by multiple criteria
-- 🤖 **AI-Powered Analysis** - Gemini AI integration for intelligent repository insights
-- ♿ **Accessibility First** - WCAG 2.1 AA compliant with full keyboard navigation
-- ✅ **100% Test Coverage** - 18/18 E2E tests passing (Playwright)
-- 🎨 **Modern UI/UX** - Dark theme with smooth animations and responsive design
-- 🔒 **Secure & Private** - Credentials stored locally, no backend required
+- 🎯 **Forensic Scanning** - Analyzes `package.json`, dependencies, and filesystem signatures.
+- 🤖 **Deep Forensic Sync** - Batch 10-point architectural audit for every repository.
+- 📊 **Master Nexus Strategy** - CTO-level portfolio review with interactive architectural insights.
+- 📄 **Resume Portfolio Generator** - ATS-friendly Markdown/JSON export for employers.
+- ♿ **Persistence & Speed** - All analyses are persistent in `localStorage` with smart-caching.
+- 🎨 **Modern Dashboard** - High-fidelity dark mode with interactive nexus blueprints.
 
 ---
 
 ## Features
 
-### Repository Management
+### Repository Intelligence
 
-- **Browse & Search** - View all your public and private repositories with real-time search
-- **Advanced Filtering** - Filter by programming language, visibility (public/private), and search terms
-- **Flexible Sorting** - Sort by update date, name (A-Z/Z-A), or language
-- **Repository Actions**:
-  - 📊 AI-powered analysis with project insights
-  - 📥 Direct download as ZIP
-  - 🗑️ Delete repositories (with confirmation)
+- **Quick Sync** - Rapidly fetch metadata and update repository state from GitHub.
+- **Deep Sync** - Perform a batch **10-Point Architectural Assessment** on all repos. Skips already-analyzed, stagnant projects to save tokens.
+- **Scan Local** - Forensic analysis of local directories. Detects:
+  - Tech Signatures (`Dockerfile`, `requirements.txt`, etc.)
+  - Dependency Lists (reads `package.json` for overlaps)
+  - Proof-of-Life Forensics (days since last commit)
+- **Summarize All (Master Strategy)** - Unified "Master Nexus Blueprint" dashboard including:
+  - **Action Registry**: Status (Active/Stalled/Legacy) and immediate next steps.
+  - **Cross-Pollination**: Shared component and pattern opportunities.
+  - **Consolidation Roadmap**: Identify overlaps and merge candidates.
+  - **Innovation Lab**: Creative brainstorming for "Missing Links" and synergistic new projects.
+  - **Downloadable JSON**: Export the entire strategy for offline review.
 
-### AI Analysis (Powered by Google Gemini)
+### Resume & Career Tools
 
-Each repository analysis provides:
-- **Project Identity** - AI-generated one-sentence summary
-- **Resume Points** - Key technical accomplishments for your resume
-- **Forgotten Gems** - Undiscovered features or ideas in your code
-- **Structural Strategy** - Recommendations for code organization
-- **README Preview** - View original documentation side-by-side
+- **Resume Portfolio** - Generate a professional, employer-ready document containing:
+  - **Executive Summary**: Compelling elevator pitch.
+  - **Skills Matrix**: Aggregated technologies across your entire portfolio.
+  - **Project Showcase**: Top projects with quantified impact and achievement bullets.
+  - **Testing & Quality Evidence**: Proof of best practices found in code forensics.
+  - **Career Narrative**: Cohesive story connecting all projects.
+  - **Download Options**: Export as professional **Markdown (.md)** or **JSON**.
 
-Results are cached locally for instant access.
+### Deep Forensic Analysis (10-Point Standard)
 
-### Accessibility Features
-
-- ✅ Full keyboard navigation support
-- ✅ ARIA labels on all interactive elements
-- ✅ Focus trap in modal dialogs
-- ✅ Screen reader compatible
-- ✅ High contrast color scheme
-- ✅ Skip to content links
-- ✅ ESC key to close modals
+Each repository sync provides:
+1.  **Vitality Score** - 0-100% production readiness estimate.
+2.  **Completion Gap** - List of critical missing features.
+3.  **Component Catalog** - High-value reusable functions/classes with file paths.
+4.  **Tech Debt Audit** - Specific anti-patterns and hardcoded risks.
+5.  **Key Algorithms** - Unique logic worth preserving.
+6.  **Pivot Potential** - Creative ideas to repurpose the codebase.
+7.  **Dependency Risk** - Deprecated or overkill dependency flags.
+8.  **Integration Surface** - API endpoints and exported CLI commands.
+9.  **Architectural Pattern** - Pattern identification (MVC, Serverless, etc.).
+10. **Immediate Action Plan** - Archive, Polish, Refactor, or Publish.
 
 ---
 
 ## Technology Stack
 
-### Frontend
-- **React 19.2** - Latest React with concurrent features
-- **TypeScript 5.8** - Type-safe development
-- **Vite 6.2** - Lightning-fast build tool
-- **Tailwind CSS** - Utility-first styling (via inline classes)
+### Frontend & Logic
+- **React 19.2** (Latest) & **TypeScript 5.8**
+- **Vite 6.2** - Lightning-fast development & HMR
+- **Tailwind CSS** - Modern dark-mode UI
+- **localStorage Persistence** - Full state recovery across sessions
 
-### Testing & Quality
-- **Playwright 1.57** - E2E testing (100% pass rate)
-- **ESLint** - Code linting with React & accessibility plugins
-- **axe-core** - Automated accessibility testing
-
-### APIs & Services
-- **GitHub REST API** - Repository data & management
-- **Google Gemini AI** - Intelligent code analysis
+### AI & APIs
+- **OpenRouter AI Integration** - Dynamic model selection (Gemini 2.0/Pro, etc.)
+- **GitHub REST API** - Comprehensive repository management
+- **File System Access API** - Forensic local directory scanning
 
 ---
 
@@ -90,328 +94,38 @@ Results are cached locally for instant access.
 ### Prerequisites
 
 - **Node.js** (v18 or higher)
-- **GitHub Personal Access Token** (classic) with `repo` scope
-- **Gemini API Key** (for AI analysis features)
+- **GitHub Personal Access Token** with `repo` scope
+- **OpenRouter API Key** (for advanced architectural features)
 
 ### Installation
 
-1. **Clone the repository**
+1. **Clone & Install**
    ```bash
    git clone https://github.com/deesatzed/repo-nexus.git
-   cd repo-nexus
-   ```
-
-2. **Install dependencies**
-   ```bash
+   cd repo-nexus/reponexus-test
    npm install
    ```
 
-3. **Configure API Keys**
-
+2. **Configure Environment**
    Create a `.env.local` file:
    ```env
-   GEMINI_API_KEY=your_gemini_api_key_here
+   OPENROUTER_API_KEY=your_key_here
+   OPENROUTER_MODEL=google/gemini-2.0-flash-exp  # Optional
    ```
 
-4. **Run the development server**
+3. **Run Dev**
    ```bash
    npm run dev
    ```
-
-5. **Open your browser**
-
-   Navigate to `http://localhost:3000`
-
-### First-Time Setup
-
-1. Click **"Go to Settings"** on the welcome screen
-2. Enter your **GitHub Username** (e.g., `deesatzed`)
-3. Enter your **GitHub Personal Access Token**
-   - Create one at: https://github.com/settings/tokens
-   - Required scope: `repo` (full repository access)
-   - Optional scope: `delete_repo` (if you want to delete repos)
-4. Click **"Save Config"**
-
-Your credentials are stored in `localStorage` and never leave your browser.
-
----
-
-## Development
-
-### Available Scripts
-
-```bash
-# Development
-npm run dev              # Start dev server (http://localhost:3000)
-npm run build            # Production build
-npm run preview          # Preview production build
-
-# Code Quality
-npm run lint             # Run ESLint
-npm run lint:fix         # Auto-fix ESLint issues
-
-# Testing
-npm run test:e2e         # Run E2E tests (Playwright)
-npm run test:e2e:ui      # Run E2E tests in UI mode
-npm run test:e2e:report  # View HTML test report
-
-# Accessibility
-npm run a11y:audit       # Run axe accessibility audit
-```
-
-### Project Structure
-
-```
-repo-nexus/
-├── src/
-│   ├── App.tsx              # Main application component
-│   ├── index.tsx            # Entry point
-│   ├── types.ts             # TypeScript type definitions
-│   ├── services/
-│   │   ├── githubService.ts # GitHub API integration
-│   │   └── geminiService.ts # Gemini AI integration
-│   └── lib/
-│       └── cache.ts         # LocalStorage cache management
-├── e2e/
-│   ├── app.spec.ts          # E2E test suite (18 tests)
-│   └── helpers/
-│       ├── apiMocks.ts      # API mocking utilities
-│       └── testUtils.ts     # Test helper functions
-├── public/                  # Static assets
-├── playwright.config.ts     # Playwright configuration
-├── vite.config.ts          # Vite configuration
-└── package.json            # Dependencies & scripts
-```
-
----
-
-## Testing
-
-### End-to-End Tests (Playwright)
-
-**Status**: ✅ **18/18 tests passing (100%)**
-
-```bash
-# Run all E2E tests
-npm run test:e2e
-
-# Run tests in interactive UI mode
-npm run test:e2e:ui
-
-# View detailed HTML report
-npm run test:e2e:report
-```
-
-**Test Coverage**:
-- ✅ Navigation & Routing (3/3)
-- ✅ Form Validation (1/1)
-- ✅ Accessibility (2/2)
-- ✅ Error Handling (2/2)
-- ✅ User Feedback (2/2)
-- ✅ Data Loading (5/5)
-- ✅ Filtering & Sorting (3/3)
-
-**Execution Time**: ~3.3 seconds
-
-For detailed test results and debugging process, see [E2E_DEBUG_SUMMARY.md](./E2E_DEBUG_SUMMARY.md).
-
-### Accessibility Testing
-
-```bash
-# Automated accessibility audit (requires app running)
-npm run dev  # In one terminal
-npm run a11y:audit  # In another terminal
-```
-
-**WCAG 2.1 Level AA Compliance**:
-- ✅ Keyboard Navigation (1.1.1, 2.1.1)
-- ✅ Non-text Content (1.1.1)
-- ✅ Link Purpose (2.4.4)
-- ✅ Focus Visible (2.4.7)
-- ✅ Label in Name (2.5.3)
-- ✅ ARIA Roles & Labels (4.1.2)
-
----
-
-## Features in Detail
-
-### Repository Dashboard
-
-The main dashboard displays all your repositories in a responsive grid with:
-- **Repository cards** showing name, description, language, and privacy status
-- **Real-time search** across repository names and descriptions
-- **Multi-criteria filtering** by language and visibility
-- **Flexible sorting** by date, name, or language
-- **Quick actions** for each repository (analyze, download, delete)
-
-### AI Analysis Modal
-
-Click "Analyze AI" on any repository to:
-1. Fetch the README from GitHub
-2. Send to Gemini AI for analysis
-3. Display insights in an organized modal with tabs:
-   - **AI Insights** - Structured analysis with resume points, forgotten ideas, and recommendations
-   - **Source README** - Original documentation for reference
-
-Analysis results are cached locally to avoid redundant API calls.
-
-### Settings Panel
-
-Configure your GitHub credentials:
-- **GitHub Username** - Your GitHub account username
-- **Personal Access Token** - GitHub PAT with repo access
-- **Local Storage** - Credentials never sent to external servers
-
----
-
-## Deployment
-
-### Build for Production
-
-```bash
-npm run build
-```
-
-Output will be in `dist/` directory.
-
-### Deploy to Vercel
-
-1. Install Vercel CLI: `npm i -g vercel`
-2. Run: `vercel`
-3. Set environment variable in Vercel dashboard:
-   - `GEMINI_API_KEY` = your Gemini API key
-
-### Deploy to Netlify
-
-1. Build the app: `npm run build`
-2. Upload `dist/` folder to Netlify
-3. Set environment variable:
-   - `GEMINI_API_KEY` = your Gemini API key
-
----
-
-## Documentation
-
-- **[E2E Test Results](./E2E_TEST_RESULTS.md)** - Comprehensive testing documentation
-- **[Debug Summary](./E2E_DEBUG_SUMMARY.md)** - Detailed debugging process and findings
-- **[API Mock Plan](./API_MOCK_DEBUG_PLAN.md)** - Testing infrastructure strategy
-- **[Development Plan](./DEVELOPMENT_PLAN.md)** - Project roadmap and architecture
-
----
-
-## Browser Support
-
-- ✅ Chrome/Edge (latest)
-- ✅ Firefox (latest)
-- ✅ Safari (latest)
-- ✅ Mobile browsers (responsive design)
-
-**Recommended**: Chrome or Edge for best Playwright testing experience
-
----
-
-## Performance
-
-- **Fast Load Times** - Vite HMR for instant updates
-- **Optimized Builds** - Tree-shaking and code splitting
-- **Lazy Loading** - Modal content loaded on demand
-- **Local Caching** - Analysis results cached for instant access
-- **Network Optimization** - Minimal API calls with smart caching
 
 ---
 
 ## Security & Privacy
 
-- 🔒 **No Backend** - Fully client-side application
-- 🔒 **Local Storage** - Credentials stored in browser only
-- 🔒 **HTTPS Required** - For production deployments
-- 🔒 **Token Scope** - Only request necessary GitHub permissions
-- 🔒 **No Analytics** - No tracking or data collection
-
-**Note**: Your GitHub token is stored in `localStorage` and is only sent to GitHub's API. It never touches any third-party servers.
-
----
-
-## Troubleshooting
-
-### "Failed to fetch repositories"
-
-**Cause**: Invalid GitHub token or insufficient permissions
-
-**Solution**:
-1. Go to Settings
-2. Create a new Personal Access Token at https://github.com/settings/tokens
-3. Ensure `repo` scope is selected
-4. Copy and paste the new token
-
-### "Analysis Failed"
-
-**Cause**: Invalid Gemini API key or rate limit exceeded
-
-**Solution**:
-1. Check `.env.local` has correct `GEMINI_API_KEY`
-2. Verify your Gemini API quota at https://ai.google.dev/
-3. Wait a few minutes if rate limited, then retry
-
-### E2E Tests Failing
-
-**Cause**: App not running or port conflict
-
-**Solution**:
-```bash
-# Ensure dev server is running
-npm run dev
-
-# In another terminal
-npm run test:e2e
-```
-
----
-
-## Contributing
-
-Contributions are welcome! Please follow these guidelines:
-
-1. **Fork the repository**
-2. **Create a feature branch** (`git checkout -b feature/amazing-feature`)
-3. **Make your changes** with clear commit messages
-4. **Run tests** (`npm run test:e2e` and `npm run lint`)
-5. **Ensure accessibility** (`npm run a11y:audit`)
-6. **Commit your changes** (`git commit -m 'Add amazing feature'`)
-7. **Push to the branch** (`git push origin feature/amazing-feature`)
-8. **Open a Pull Request**
-
-### Development Guidelines
-
-- ✅ Maintain 100% E2E test pass rate
-- ✅ Follow TypeScript strict mode
-- ✅ Ensure WCAG 2.1 AA compliance
-- ✅ Add ARIA labels to new interactive elements
-- ✅ Update documentation for new features
-- ✅ Use semantic HTML
-- ✅ Test keyboard navigation
-
----
-
-## Roadmap
-
-### Upcoming Features
-
-- [ ] Multi-repo batch operations
-- [ ] Export analysis reports (PDF/Markdown)
-- [ ] Repository comparison tool
-- [ ] Advanced search with regex
-- [ ] Custom AI prompts
-- [ ] Dark/light theme toggle
-- [ ] Repository templates
-- [ ] Collaboration features
-
-### Performance Improvements
-
-- [ ] Virtual scrolling for large repo lists
-- [ ] Web Workers for AI processing
-- [ ] Service Worker for offline support
-- [ ] Image optimization
+- 🔒 **Zero-Backend Architecture** - All data processing happens on your machine.
+- 🔒 **Local Persistence** - API keys and repository metadata stay in `localStorage`.
+- 🔒 **Secure Tokens** - GitHub tokens are sent only to GitHub's official API.
+- 🔒 **Downloadable Reports** - You own your analysis; export it any time as JSON or MD.
 
 ---
 
@@ -419,69 +133,12 @@ Contributions are welcome! Please follow these guidelines:
 
 This project is licensed under the **MIT License**.
 
-```
-MIT License
-
-Copyright (c) 2024 RepoNexus
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-```
-
----
-
-## Acknowledgments
-
-- **React Team** - For the amazing React framework
-- **Playwright Team** - For robust E2E testing tools
-- **Google** - For Gemini AI API
-- **GitHub** - For the comprehensive REST API
-- **Tailwind Labs** - For design inspiration
-- **axe-core** - For accessibility testing tools
-
----
-
-## Support
-
-- 🐛 **Bug Reports**: [Open an issue](https://github.com/deesatzed/repo-nexus/issues)
-- 💡 **Feature Requests**: [Start a discussion](https://github.com/deesatzed/repo-nexus/discussions)
-- 📧 **Contact**: Create an issue for questions
-
----
-
-## Stats
-
-- **Lines of Code**: ~2,500
-- **Test Files**: 3
-- **Test Cases**: 18 (100% passing)
-- **Test Coverage**: All critical user flows
-- **Build Time**: ~2-3 seconds
-- **Test Execution**: ~3.3 seconds
-- **Lighthouse Score**: 95+ (Performance, Accessibility, Best Practices)
-
 ---
 
 <div align="center">
 
-**Made with ❤️ by developers, for developers**
+**Made with ❤️ for Senior Engineers who want to turn their "Project Graveyard" into a "Strategic Asset."**
 
-⭐ Star this repo if you find it useful!
-
-[Report Bug](https://github.com/deesatzed/repo-nexus/issues) • [Request Feature](https://github.com/deesatzed/repo-nexus/issues) • [View Docs](./DEVELOPMENT_PLAN.md)
+⭐ Star this repo if it helps you land your next role!
 
 </div>
