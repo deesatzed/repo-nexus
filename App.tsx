@@ -36,8 +36,14 @@ const App: React.FC = () => {
   const [isSyncing, setIsSyncing] = useState(false);
   const [syncProgress, setSyncProgress] = useState({ current: 0, total: 0, currentName: '' });
   const [syncLimit, setSyncLimit] = useState<number>(Number(localStorage.getItem('sync_limit')) || 20);
-  const [localRepos, setLocalRepos] = useState<GithubRepo[]>([]);
-  const [inventoryAnalysis, setInventoryAnalysis] = useState<any>(null);
+  const [localRepos, setLocalRepos] = useState<GithubRepo[]>(() => {
+    const saved = localStorage.getItem('local_repos');
+    return saved ? JSON.parse(saved) : [];
+  });
+  const [inventoryAnalysis, setInventoryAnalysis] = useState<any>(() => {
+    const saved = localStorage.getItem('inventory_analysis');
+    return saved ? JSON.parse(saved) : null;
+  });
   const [isSummarizing, setIsSummarizing] = useState(false);
 
   const closeButtonRef = useRef<HTMLButtonElement>(null);
@@ -151,11 +157,16 @@ const App: React.FC = () => {
     try {
       const service = new LocalFileSystemService();
       const newRepos = await service.selectAndScan();
-      setLocalRepos(prev => [...prev, ...newRepos]);
+      const updatedLocal = [...localRepos, ...newRepos];
+      // Use a Map to deduplicate by full_name
+      const uniqueLocal = Array.from(new Map(updatedLocal.map(r => [r.full_name, r])).values());
+
+      setLocalRepos(uniqueLocal);
+      localStorage.setItem('local_repos', JSON.stringify(uniqueLocal));
       setToast({ message: `Found ${newRepos.length} local repositories`, type: 'success' });
     } catch (err: any) {
       if (err.name !== 'AbortError') {
-        setToast({ message: 'Failed to scan local folder', type: 'error' });
+        setToast({ message: `Scan failed: ${err.message || 'Unknown error'}`, type: 'error' });
       }
     } finally {
       setLoading(false);
@@ -166,13 +177,187 @@ const App: React.FC = () => {
     setIsSummarizing(true);
     try {
       const allRepos = [...repos, ...localRepos];
-      const result = await summarizeInventory(allRepos);
+
+      // Enrich the data sent to AI with cached analysis if it exists
+      const enrichedSummaries = allRepos.map(r => {
+        const cached = localStorage.getItem(`analysis_${r.id}`);
+        const parsed = cached ? JSON.parse(cached) : null;
+
+        // Calculate days since last update for accurate "Stalled" detection
+        const daysSinceUpdate = Math.floor((new Date().getTime() - new Date(r.updated_at).getTime()) / (1000 * 3600 * 24));
+
+        return {
+          name: r.name,
+          language: r.language,
+          description: r.description,
+          daysSinceUpdate: daysSinceUpdate,
+          // @ts-ignore - techSignature exists on local repos now
+          techSignature: r.techSignature || { detectedFiles: [], dependencies: [] },
+          pulse: parsed?.projectPulse || 'No analysis available'
+        };
+      });
+
+      const result = await summarizeInventory(enrichedSummaries);
       setInventoryAnalysis(result);
+      localStorage.setItem('inventory_analysis', JSON.stringify(result));
       setView(View.INVENTORY);
     } catch (err: any) {
       setToast({ message: err.message, type: 'error' });
     } finally {
       setIsSummarizing(false);
+    }
+  };
+
+  const handleDeepSyncAll = async () => {
+    const allRepos = [...repos, ...localRepos];
+    let processed = 0;
+
+    setToast({ message: `Starting Deep Sync on ${allRepos.length} repositories...`, type: 'success' });
+
+    for (const repo of allRepos) {
+      // Cache Check: Don't re-analyze if we have data and the repo is old/stagnant
+      const cacheKey = `analysis_${repo.id}`;
+      const cachedRaw = localStorage.getItem(cacheKey);
+
+      if (cachedRaw) {
+        const cached = JSON.parse(cachedRaw);
+        // If we have the NEW 10-point schema (check for 'vitalityScore'), skip
+        if (cached.vitalityScore !== undefined) {
+          console.log(`Skipping ${repo.name} - already has deep analysis.`);
+          continue;
+        }
+      }
+
+      // Run Analysis
+      try {
+        setToast({ message: `Analyzing ${repo.name} (${processed + 1}/${allRepos.length})...`, type: 'success' });
+
+        // Fetch fresh README if possible
+        const service = new GithubService(githubToken);
+        let readme = "";
+        try {
+          if (!repo.isLocal) readme = await service.fetchRepoReadme(repo.full_name);
+          else readme = repo.readme_content || "";
+        } catch { readme = "No README"; }
+
+        // Use 'superficial' level but with the NEW prompt that demands 10 points
+        const result = await analyzeRepository(repo, readme, 'superficial');
+
+        const finalAnalysis: AnalysisResult = {
+          ...result,
+          status: 'success',
+          level: 'superficial',
+          fullReadme: readme
+        };
+
+        localStorage.setItem(cacheKey, JSON.stringify(finalAnalysis));
+        processed++;
+      } catch (e) {
+        console.error(`Failed to analyze ${repo.name}`, e);
+      }
+    }
+
+    setToast({ message: `Deep Sync Complete. Updated ${processed} repositories.`, type: 'success' });
+  };
+
+  const handleGenerateResume = async () => {
+    setToast({ message: 'Generating Professional Portfolio...', type: 'success' });
+
+    try {
+      const allRepos = [...repos, ...localRepos];
+
+      // Gather all cached analyses
+      const analyses = allRepos.map(r => {
+        const cached = localStorage.getItem(`analysis_${r.id}`);
+        return cached ? JSON.parse(cached) : null;
+      }).filter(Boolean);
+
+      if (analyses.length === 0) {
+        setToast({ message: 'Please run "Deep Sync" first to analyze repositories', type: 'error' });
+        return;
+      }
+
+      // Call AI to generate resume portfolio
+      const { generateResumePortfolio } = await import('./services/geminiService');
+      const portfolio = await generateResumePortfolio(allRepos, analyses);
+
+      // Format as Markdown
+      const markdown = `# Professional Portfolio - Software Engineer
+
+${portfolio.executiveSummary}
+
+---
+
+## Technical Skills
+
+**Languages:** ${portfolio.skillsMatrix?.languages?.join(', ') || 'N/A'}
+**Frameworks:** ${portfolio.skillsMatrix?.frameworks?.join(', ') || 'N/A'}
+**Tools & Platforms:** ${portfolio.skillsMatrix?.tools?.join(', ') || 'N/A'}
+**Methodologies:** ${portfolio.skillsMatrix?.methodologies?.join(', ') || 'N/A'}
+
+---
+
+## Project Showcase
+
+${portfolio.projectShowcase?.map((proj: any) => `
+### ${proj.name}
+*${proj.tagline}*
+
+${proj.bulletPoints?.map((bp: string) => `- ${bp}`).join('\n') || ''}
+
+**Technologies:** ${proj.technicalHighlights?.join(', ') || 'N/A'}  
+**Impact:** ${proj.impact}
+`).join('\n---\n') || 'No projects available'}
+
+---
+
+## Architecture & Design Experience
+
+${portfolio.architectureExperience?.map((exp: string) => `- ${exp}`).join('\n') || 'N/A'}
+
+---
+
+## Quality & Best Practices
+
+${portfolio.qualityPractices?.map((qp: string) => `- ${qp}`).join('\n') || 'N/A'}
+
+---
+
+## Standout Achievements
+
+${portfolio.standoutAchievements?.map((sa: string) => `- ${sa}`).join('\n') || 'N/A'}
+
+---
+
+## Career Narrative
+
+${portfolio.careerNarrative}
+
+---
+
+*Generated by RepoNexus AI Repository Architect*
+*Date: ${new Date().toLocaleDateString()}*
+`;
+
+      // Download as Markdown
+      const blob = new Blob([markdown], { type: 'text/markdown' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `portfolio-resume-addendum-${new Date().toISOString().split('T')[0]}.md`;
+      a.click();
+
+      // Also save JSON version
+      const jsonBlob = new Blob([JSON.stringify(portfolio, null, 2)], { type: 'application/json' });
+      const jsonUrl = URL.createObjectURL(jsonBlob);
+      const jsonA = document.createElement('a');
+      jsonA.href = jsonUrl;
+      jsonA.download = `portfolio-data-${new Date().toISOString().split('T')[0]}.json`;
+      jsonA.click();
+
+      setToast({ message: 'Resume Portfolio Generated! Check your downloads.', type: 'success' });
+    } catch (err: any) {
+      setToast({ message: err.message, type: 'error' });
     }
   };
 
@@ -288,11 +473,12 @@ const App: React.FC = () => {
   };
 
   // Derived unique languages for filter
+  // IMPORTANT: Always combine repos (GitHub) and localRepos (Local Folder) for portfolio-wide state
   const languages = useMemo(() => {
     const langs = new Set<string>();
-    repos.forEach(r => { if (r.language) langs.add(r.language); });
+    [...repos, ...localRepos].forEach(r => { if (r.language) langs.add(r.language); });
     return ['All', ...Array.from(langs).sort()];
-  }, [repos]);
+  }, [repos, localRepos]);
 
   // Computed filtered and sorted repos
   const displayRepos = useMemo(() => {
@@ -337,7 +523,7 @@ const App: React.FC = () => {
     });
 
     return result;
-  }, [repos, searchTerm, filterLang, filterVisibility, sortBy]);
+  }, [repos, localRepos, searchTerm, filterLang, filterVisibility, sortBy]);
 
   // Parse advice string into points
   const advicePoints = useMemo(() => {
@@ -442,13 +628,13 @@ const App: React.FC = () => {
           <div className="flex items-center gap-4">
             <button
               onClick={() => fetchRepos(true)}
-              disabled={loading || isSyncing}
+              disabled={loading}
               className="px-3 py-1.5 bg-indigo-600/10 hover:bg-indigo-600/20 text-indigo-400 border border-indigo-500/20 rounded-lg text-xs font-semibold flex items-center gap-2 transition-all disabled:opacity-50"
             >
-              <svg className={`w-3.5 h-3.5 ${isSyncing ? 'animate-spin' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
               </svg>
-              {isSyncing ? 'Syncing...' : 'Deep Sync'}
+              Quick Sync
             </button>
             <button
               onClick={handleScanLocal}
@@ -461,6 +647,16 @@ const App: React.FC = () => {
               Scan Local
             </button>
             <button
+              onClick={handleDeepSyncAll}
+              disabled={loading || isSyncing}
+              className="px-3 py-1.5 bg-purple-600/10 hover:bg-purple-600/20 text-purple-400 border border-purple-500/20 rounded-lg text-xs font-semibold flex items-center gap-2 transition-all disabled:opacity-50"
+            >
+              <svg className={`w-3.5 h-3.5 ${isSyncing ? 'animate-spin' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.384-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+              </svg>
+              Deep Sync
+            </button>
+            <button
               onClick={handleSummarizeInventory}
               disabled={isSummarizing || (repos.length === 0 && localRepos.length === 0)}
               className="px-3 py-1.5 bg-amber-600/10 hover:bg-amber-600/20 text-amber-400 border border-amber-500/20 rounded-lg text-xs font-semibold flex items-center gap-2 transition-all disabled:opacity-50"
@@ -469,6 +665,15 @@ const App: React.FC = () => {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
               {isSummarizing ? 'Summarizing...' : 'Summarize All'}
+            </button>
+            <button
+              onClick={handleGenerateResume}
+              className="px-3 py-1.5 bg-gradient-to-r from-blue-600/10 to-cyan-600/10 hover:from-blue-600/20 hover:to-cyan-600/20 text-cyan-400 border border-cyan-500/20 rounded-lg text-xs font-semibold flex items-center gap-2 transition-all"
+            >
+              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              Resume Portfolio
             </button>
             <button
               onClick={() => fetchRepos()}
@@ -591,7 +796,10 @@ const App: React.FC = () => {
                     <span className="text-indigo-400 font-mono text-xs uppercase tracking-wider">{repo.language || 'Plain Text'}</span>
                     {repo.private && <span className="bg-slate-800 text-slate-400 text-[10px] px-2 py-0.5 rounded font-bold uppercase tracking-tighter border border-slate-700">Private</span>}
                   </div>
-                  <h4 className="text-lg font-bold text-white mb-2 group-hover:text-indigo-400 transition-colors truncate">{repo.name}</h4>
+                  <h4 className="text-lg font-bold text-white mb-2 group-hover:text-indigo-400 transition-colors truncate flex items-center gap-2">
+                    {repo.name}
+                    {repo.isLocal && <span className="text-[10px] bg-emerald-500/20 text-emerald-400 px-1.5 py-0.5 rounded border border-emerald-500/20">LOCAL</span>}
+                  </h4>
                   <p className="text-sm text-slate-400 mb-6 line-clamp-2 h-10">{repo.description || 'No description provided.'}</p>
                   <div className="mt-auto flex items-center justify-between">
                     <span className="text-xs text-slate-500">Updated {new Date(repo.updated_at).toLocaleDateString()}</span>
@@ -703,52 +911,224 @@ const App: React.FC = () => {
           )}
 
           {view === View.INVENTORY && inventoryAnalysis && (
-            <div className="max-w-4xl mx-auto space-y-10">
-              <section className="bg-gradient-to-br from-indigo-900/40 to-slate-900 border border-indigo-500/30 p-10 rounded-[3rem] shadow-2xl">
-                <div className="flex items-center gap-4 mb-6">
-                  <div className="w-14 h-14 bg-indigo-600 rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-600/20">
-                    <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                    </svg>
-                  </div>
-                  <div>
-                    <h3 className="text-3xl font-bold text-white tracking-tight">Portfolio Perspective</h3>
-                    <p className="text-indigo-400 font-medium">Strategic AI Assessment</p>
-                  </div>
+            <div className="max-w-7xl mx-auto space-y-12 pb-32">
+              {/* Strategic Header */}
+              <section className="bg-gradient-to-br from-[#1e1b4b] via-slate-900 to-black border border-indigo-500/20 p-16 rounded-[4rem] shadow-2xl relative">
+                <div className="absolute top-0 right-0 p-8 flex gap-4">
+                  <button
+                    onClick={() => {
+                      const report = {
+                        strategy: inventoryAnalysis,
+                        repos: [...repos, ...localRepos].map(r => {
+                          const cached = localStorage.getItem(`analysis_${r.id}`);
+                          return {
+                            ...r,
+                            analysis: cached ? JSON.parse(cached) : null
+                          };
+                        })
+                      };
+                      const blob = new Blob([JSON.stringify(report, null, 2)], { type: 'application/json' });
+                      const url = URL.createObjectURL(blob);
+                      const a = document.createElement('a');
+                      a.href = url;
+                      a.download = `nexus-master-strategy-${new Date().toISOString().split('T')[0]}.json`;
+                      a.click();
+                      setToast({ message: 'Full Nexus Report Downloaded', type: 'success' });
+                    }}
+                    className="px-6 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-full text-xs font-bold uppercase tracking-widest border border-slate-700 transition-all"
+                  >
+                    Download Full Report
+                  </button>
+                  <span className="px-4 py-2 bg-indigo-500/10 border border-indigo-500/20 rounded-full text-indigo-400 text-xs font-bold tracking-widest uppercase">Nexus Master Blueprint</span>
                 </div>
-                <p className="text-2xl text-slate-100 font-medium leading-relaxed italic border-l-4 border-indigo-500 pl-6 py-2">
-                  &quot;{inventoryAnalysis.portfolioFocus}&quot;
-                </p>
+                <div className="max-w-3xl">
+                  <h3 className="text-5xl font-black text-white tracking-tighter mb-8 leading-none">The Master Nexus Strategy</h3>
+                  <p className="text-2xl text-slate-300 font-medium leading-relaxed border-l-4 border-indigo-500 pl-8">
+                    {inventoryAnalysis.executiveSummary}
+                  </p>
+                </div>
               </section>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <section className="bg-[#0f172a] border border-slate-800 p-8 rounded-3xl">
-                  <h4 className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-6">Technological Clusters</h4>
-                  <div className="flex flex-wrap gap-3">
-                    {Array.isArray(inventoryAnalysis.techStacks) ? inventoryAnalysis.techStacks.map((tech: string, i: number) => (
-                      <span key={i} className="px-4 py-2 bg-slate-800 text-indigo-300 rounded-full text-sm font-semibold border border-slate-700">
-                        {tech}
-                      </span>
-                    )) : (
-                      <p className="text-slate-300">{inventoryAnalysis.techStacks}</p>
-                    )}
+              {/* Actionable Repo Registry */}
+              <div className="space-y-6">
+                <div className="flex items-center justify-between px-4">
+                  <h4 className="text-xl font-bold text-white flex items-center gap-3">
+                    <span className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-600/20 text-sm">01</span>
+                    Repository Action Registry
+                  </h4>
+                  <div className="flex gap-4 text-xs">
+                    <span className="flex items-center gap-1.5 text-emerald-400"><span className="w-2 h-2 bg-emerald-400 rounded-full"></span> Active</span>
+                    <span className="flex items-center gap-1.5 text-amber-400"><span className="w-2 h-2 bg-amber-400 rounded-full"></span> Stalled</span>
+                    <span className="flex items-center gap-1.5 text-slate-500"><span className="w-2 h-2 bg-slate-500 rounded-full"></span> Legacy</span>
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 gap-4">
+                  {(inventoryAnalysis.repoRegistry || []).map((item: any, i: number) => {
+                    const foundRepo = [...repos, ...localRepos].find(r => r.name === item.name);
+                    const cachedRaw = foundRepo ? localStorage.getItem(`analysis_${foundRepo.id}`) : null;
+                    const cached = cachedRaw ? JSON.parse(cachedRaw) : null;
+
+                    return (
+                      <div key={i} className="bg-[#0f172a] border border-slate-800 p-8 rounded-3xl hover:border-indigo-500/30 transition-all grid grid-cols-1 gap-6 group">
+                        {/* Header Row */}
+                        <div className="flex flex-col lg:flex-row lg:items-center gap-6 pb-6 border-b border-slate-800/50">
+                          <div className="flex items-center gap-4 flex-1">
+                            <div className={`w-3 h-12 rounded-full ${item.status === 'Active' ? 'bg-emerald-500' : item.status === 'Stalled' ? 'bg-amber-500' : item.status === 'Legacy' ? 'bg-slate-700' : 'bg-indigo-500'}`}></div>
+                            <div>
+                              <h5 className="text-white font-bold text-2xl group-hover:text-indigo-400 transition-colors flex items-center gap-3 cursor-pointer"
+                                onClick={() => foundRepo && handleAnalyze(foundRepo)}
+                              >
+                                {item.name}
+                                <svg className="w-5 h-5 opacity-0 group-hover:opacity-100 transition-opacity" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
+                              </h5>
+                              <div className="flex items-center gap-3 mt-1">
+                                <span className="text-slate-500 text-xs font-mono uppercase tracking-tight bg-slate-800 px-2 py-0.5 rounded">{item.status}</span>
+                                <span className={`text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded ${item.priority === 'High' ? 'text-red-400 bg-red-400/10' :
+                                  item.priority === 'Medium' ? 'text-amber-400 bg-amber-400/10' :
+                                    'text-emerald-400 bg-emerald-400/10'
+                                  }`}>{item.priority} Priority</span>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="lg:w-1/2">
+                            <p className="text-slate-300 text-sm leading-relaxed border-l-2 border-indigo-500/50 pl-4"><span className="text-indigo-400 font-bold">Recommended Action:</span> {item.action}</p>
+                            <p className="text-slate-500 text-xs mt-1 pl-4 italic">{item.reasoning}</p>
+                          </div>
+                        </div>
+
+                        {/* Deep Analysis Data Grid (If cached) */}
+                        {cached ? (
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-2">
+                            <div className="bg-slate-900/50 p-4 rounded-xl border border-slate-800">
+                              <h6 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Resume Descriptors</h6>
+                              <ul className="space-y-1">
+                                {cached.resumePoints?.slice(0, 2).map((pt: string, idx: number) => (
+                                  <li key={idx} className="text-xs text-slate-300 flex gap-2"><span className="text-indigo-500">•</span> {pt}</li>
+                                ))}
+                              </ul>
+                            </div>
+                            <div className="bg-slate-900/50 p-4 rounded-xl border border-slate-800">
+                              <h6 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Forgotten Gems</h6>
+                              <ul className="space-y-1">
+                                {cached.forgottenIdeas?.slice(0, 2).map((pt: string, idx: number) => (
+                                  <li key={idx} className="text-xs text-slate-300 flex gap-2"><span className="text-amber-500">•</span> {pt}</li>
+                                ))}
+                              </ul>
+                            </div>
+                            <div className="bg-slate-900/50 p-4 rounded-xl border border-slate-800">
+                              <h6 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Technical Debt</h6>
+                              <p className="text-xs text-slate-300 leading-relaxed">{cached.reorgAdvice || "No specific reorg advice."}</p>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="flex justify-center pt-2">
+                            <button
+                              onClick={() => foundRepo && handleAnalyze(foundRepo)}
+                              className="text-xs text-indigo-400 font-bold hover:text-indigo-300 flex items-center gap-1"
+                            >
+                              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.384-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" /></svg>
+                              Run Deep Analysis to populate details
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Cross-Pollination & Synergies */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <section className="bg-indigo-500/5 border border-indigo-500/10 p-10 rounded-[3rem] relative overflow-hidden">
+                  <div className="absolute -top-10 -right-10 w-40 h-40 bg-indigo-500/10 blur-3xl rounded-full"></div>
+                  <h4 className="text-xl font-bold text-white mb-8 flex items-center gap-3">
+                    <svg className="w-6 h-6 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" /></svg>
+                    Cross-Pollination Opportunities
+                  </h4>
+                  <div className="space-y-6">
+                    {(inventoryAnalysis.crossPollination || []).map((cp: any, i: number) => (
+                      <div key={i} className="bg-slate-900/40 p-6 rounded-2xl border border-slate-800">
+                        <div className="flex items-center gap-3 mb-3">
+                          <span className="text-indigo-400 font-bold text-sm bg-indigo-400/10 px-3 py-1 rounded-lg">{cp.sourceRepo}</span>
+                          <svg className="w-4 h-4 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
+                          <span className="text-slate-400 text-xs font-medium">Multiple Targets</span>
+                        </div>
+                        <p className="text-slate-200 text-sm font-bold mb-1">Feature: {cp.feature}</p>
+                        <p className="text-slate-400 text-xs leading-relaxed">{cp.benefit}</p>
+                      </div>
+                    ))}
                   </div>
                 </section>
 
-                <section className="bg-[#0f172a] border border-slate-800 p-8 rounded-3xl">
-                  <h4 className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-6">Strategic Directions</h4>
-                  <p className="text-slate-300 leading-relaxed">
-                    {inventoryAnalysis.strategicAdvice}
-                  </p>
+                <section className="bg-emerald-500/5 border border-emerald-500/10 p-10 rounded-[3rem]">
+                  <h4 className="text-xl font-bold text-white mb-8 flex items-center gap-3">
+                    <svg className="w-6 h-6 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" /></svg>
+                    Innovation Lab: New Bridges
+                  </h4>
+                  <div className="space-y-6">
+                    {(inventoryAnalysis.innovationLab || []).map((lab: any, i: number) => (
+                      <div key={i} className="bg-slate-900/40 p-6 rounded-2xl border border-slate-800 relative">
+                        <div className="flex gap-2 mb-3">
+                          {lab.baseRepos.map((br: string, bidx: number) => (
+                            <span key={bidx} className="text-[10px] bg-slate-800 text-slate-400 px-2 py-0.5 rounded border border-slate-700">{br}</span>
+                          ))}
+                        </div>
+                        <h5 className="text-emerald-400 font-black text-lg mb-2">{lab.idea}</h5>
+                        <p className="text-slate-300 text-sm leading-relaxed"><span className="text-slate-500 italic">Missing Link:</span> {lab.missingLink}</p>
+                      </div>
+                    ))}
+                  </div>
                 </section>
               </div>
 
-              <div className="pt-10 flex justify-center">
+              {/* Consolidation & Cleanup */}
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <section className="bg-amber-500/5 border border-amber-500/10 p-10 rounded-[3rem] lg:col-span-2">
+                  <h4 className="text-xl font-bold text-white mb-8 flex items-center gap-3">
+                    <svg className="w-6 h-6 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" /></svg>
+                    Consolidation Roadmap
+                  </h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {(inventoryAnalysis.consolidationLog || []).map((log: any, i: number) => (
+                      <div key={i} className="bg-slate-900/40 p-6 rounded-2xl border border-slate-800">
+                        <div className="flex flex-wrap gap-2 mb-3">
+                          {log.reposToMerge.map((rm: string, midx: number) => (
+                            <span key={midx} className="text-[10px] bg-amber-500/10 text-amber-400 px-2 py-0.5 rounded border border-amber-500/20">{rm}</span>
+                          ))}
+                        </div>
+                        <h5 className="text-white font-bold mb-2 flex items-center gap-2">
+                          <svg className="w-4 h-4 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M19 14l-7 7m0 0l-7-7m7 7V3" /></svg>
+                          {log.proposedNewName}
+                        </h5>
+                        <p className="text-slate-400 text-sm leading-relaxed">{log.rationale}</p>
+                      </div>
+                    ))}
+                  </div>
+                </section>
+
+                <section className="bg-slate-900/80 border border-slate-800 p-10 rounded-[3rem]">
+                  <h4 className="text-xl font-bold text-white mb-8 flex items-center gap-3 text-slate-500">
+                    <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                    Maintenance Audit
+                  </h4>
+                  <ul className="space-y-4">
+                    {(inventoryAnalysis.maintenanceAudit || []).map((audit: string, i: number) => (
+                      <li key={i} className="flex gap-4 text-slate-400 text-sm">
+                        <div className="w-6 h-6 bg-slate-800 rounded-full flex items-center justify-center shrink-0 text-[10px] font-bold">{i + 1}</div>
+                        {audit}
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+              </div>
+
+              <div className="pt-20 flex justify-center">
                 <button
                   onClick={() => setView(View.DASHBOARD)}
-                  className="px-8 py-3 bg-slate-800 hover:bg-slate-700 text-white rounded-2xl font-bold transition-all border border-slate-700 hover:border-slate-600"
+                  className="px-12 py-5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-3xl font-black transition-all shadow-2xl shadow-indigo-600/30 hover:scale-105 flex items-center gap-4"
                 >
-                  Back to Explorer
+                  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
+                  Exit Master Blueprint
                 </button>
               </div>
             </div>
